@@ -1,0 +1,549 @@
+#!/bin/bash
+# This is an ultility for installing softwares
+# Or components needed for dev on vps
+# Or fixes for vps server
+# @author : HR
+# @copyright : TitanBox (c) 2015
+# @version : 2.0
+# @license : GNU GPL 2.0
+#======================================
+# SUPPORTED SERVICES
+SERVICES=(
+    "vesta"
+    "postgre"
+)
+SOURCE="${BASH_SOURCE[0]}"
+while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
+  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+  SOURCE="$(readlink "$SOURCE")"
+  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+#=================
+# Library
+#-----------------
+# Write text
+# @param text
+function write {
+        printf $"$1"
+}
+#------------------
+# Write text within a line
+# @param text
+function writeline {
+        printf $"$1\n"
+}
+#-----------------------
+# Draw a horizontal line
+# @param symbol | text length should be 1
+function drawline {
+        printf '%*s' "${COLUMNS:-$(tput cols)}" '' | tr ' ' "${1}"
+}
+#-----------------------
+# Draw a line of text on screen
+# @param text to be drawn
+# @param distance from left screen
+function drawtext {
+    printf '%*s' "${COLUMNS:-$2}" ' '
+    write "${1}"
+}
+#------------------------
+# Align text
+# @param alignment - left, right, center, ..
+function align {
+    read text
+    local distance=${#text}
+    local maxlength=$(tput cols)
+    case "${1}" in
+        left)
+            let distance=0
+        ;;
+        right)
+            let distance=$((maxlength-distance))
+        ;;
+        center)
+            let maxlength=$((maxlength/2))
+            let distance=$((distance/2))
+            let distance=$((maxlength-distance))
+        ;;
+        *)
+            return
+        ;;
+    esac;
+    drawtext "${text}\n" $distance
+}
+function writetitle {
+    drawline "="
+    write ${1^^} | align center
+    drawline "="
+}
+#----------------
+# Current path
+function path {
+    write "$( cd "$( dirname "$0" )" pwd )"
+}
+#-----------------------
+# Check function existence
+# @param $name
+function function.exists {
+    type -t $1 | grep "function" >/dev/null
+}
+#-----------------------
+# Service existence
+# @param $name
+function service.exists {
+    service --status-all 2> /dev/null | grep ^$1 >/dev/null
+}
+#-----------------------
+# Service running
+# @param $name
+function service.running {
+    pgrep $1 >/dev/null
+}
+#-----------------------
+# Current OS information
+function os {
+    if [ -f "/etc/issue" ]; then
+        cat "/etc/issue"
+    elif [ -f "/etc/redhat-release" ]; then
+        cat "etc/redhat-release"
+    elif [ -f "/etc/lsb-release" ] || function.exists "lsb_release"; then
+        lsb_release -d
+    else
+        writeline ""
+        return 1
+    fi
+}
+#-----------------------
+# OS name
+function os.name {
+    sed -n -r -e"s|([a-zA-Z]+)(.*)\ (([0-9]+)(\.[0-9]+){0,})(.*)$|\1|p" <<< "$(os)"
+}
+#-----------------------
+# OS version
+function os.version {
+    sed -n -r -e"s|([a-zA-Z]+)(.*)\ (([0-9]+)(\.[0-9]+){0,})(.*)$|\3|p" <<< "$(os)"
+}
+#---------------------
+# Check if element exists in array
+# @param $haystack[@]
+# @param $needle
+function array.exists {
+    declare -a haystack=("${!1}")
+    local needle=${2}
+    for i in "${haystack[@]}"; do
+        if [ "$i" = "$needle" ]; then
+            return 0
+        fi
+    done
+    return 1
+}
+function array.regexp {
+    declare -a haystack=("${!1}")
+    local needle=${2}
+    for i in "${haystack[@]}"; do
+        if [[ ${needle} =~ ${i} ]]; then
+            return 0
+        fi
+    done
+    return 1
+}
+function ip.reset {
+    iptables --flush && iptables --policy INPUT ACCEPT && service iptables save && service iptables stop && service iptables start
+}
+
+function ip.save {
+    service iptables save && service iptables stop && service iptables start
+}
+#=========================================
+# VESTACP
+#=========================================
+function vesta.config {
+    write "/usr/local/vesta/conf/vesta.conf"
+}
+function vesta.version {
+    local content=$(curl --location https://raw.githubusercontent.com/TitanBox/tibvps/master/version-files/vesta.txt)
+    write content
+}
+function vesta.supported {
+    local supported=(
+        ^ubuntu12
+        ^ubuntu13
+        ^ubuntu14.04
+        ^redhat5
+        ^redhat6
+        ^centos5
+        ^centos6
+        ^debian7
+    )
+    local osu="$(os.name)"
+    local current="${osu,,}""$(os.version)"
+    array.regexp supported[@] $current && write "supported" && return 0 || write "not supported" && return 1
+}
+function vesta.install {
+    if service.exists "vesta"; then
+        writeline "VestaCP already installed in your system."
+    elif vesta.supported "vesta" >/dev/null; then
+        writeline "Installing VestaCP. Do not cut connection before it finishes ..."
+        curl -O http://vestacp.com/pub/vst-install.sh
+        bash vst-install.sh && writeline "VestaCP installed."
+        # delete installer after done
+        rm -f $PATH"/vst-install.sh"
+        writetitle "SUCCESSFUL INSTALLING VESTACP version ""$(vesta.version)"
+    else
+        writeline "Vestacp not supported for your os."
+    fi
+}
+function vesta.uninstall {
+    if  service.exists "vesta"; then
+        # packages installed by vesta
+        # becuz vesta needs a fresh server
+        # these packages should not be
+        # installed before vesta
+        local packages=(
+            "apache*"
+            "fail2ban*"
+            "mysql*"
+            "nginx*"
+            "dovecot*"
+            "vsftpd*"
+            "exim*"
+            "messagebus*"
+            "bind*"
+            # apache centos
+            "httpd httpd-tools apr apr-util"
+        )
+        writetitle "Unistalling Vestacp"
+        if service.running "vesta"; then
+            service "vesta" stop
+        fi
+        writeline "@= Vestacp sevice stopped"
+        # kill named process
+        kill "$(pgrep named)"
+        local osu="$(os.name)"
+        local os="${osu,,}"
+        writeline "@= Detected OS is $osu."
+        # detect os to do right steps
+        case "$os" in
+            ubuntu|debian)
+                writeline "@= Unistalling vesta*" && apt-get -y purge vesta* >/dev/null && writeline " :: uninstalled"
+                rm -f /etc/apt/sources.list.d/vesta.list 2>/dev/null
+                writeline "@= Vesta repo removed."
+                writetitle " Unistalling Vestacp components"
+                for i in "${packages[@]}"; do
+                    writeline "@= Unistalling $i" && apt-get -y purge $i >/dev/null && writeline " :: uninstalled"
+                done
+                # clear unneeded dependencies
+                writetitle "Clean up packages"
+                apt-get -y autoremove
+            ;;
+            redhat|centos)
+                writeline "@= Unistalling vesta*" && yum -y remove vesta* >/dev/null && writeline " :: uninstalled"
+                rm -f /etc/yum.repos.d/vesta.repo 2>/dev/null
+                writeline "@= Vesta repo removed."
+                writetitle " Unistalling Vestacp components"
+                for i in "${packages[@]}"; do
+                    writeline "@= Unistalling $i" && yum -y remove $i >/dev/null && writeline " :: uninstalled"
+                done
+                # clear unneeded dependencies
+                writetitle "Clean up packages"
+                yum clean all
+            ;;
+            *)
+                writeline "Not supported os for Vestacp. Did you really installed it on your system."
+            ;;
+        esac;
+        # reset iptables rules
+        writetitle "Reset iptables and vesta chains"
+        ip.reset
+        # iptable chains added
+        # when installing vesta
+        local chains=(
+            "fail2ban-VESTA"
+            "fail2ban-SSH"
+            "fail2ban-MAIL"
+            "vesta"
+        )
+        for k in "${chains[@]}"; do
+            writeline "@= Removing ${k}"
+            iptables -X "${k}"
+            writeline " :: removed"
+        done
+        ip.save
+        writeline "@= IP configs reset."
+        # remove all other services not properly uninstalled
+        # delete admin user and cronjobs
+        writetitle "Remove user and cronjobs"
+        rm -rf /home/admin && passwd -l admin >/dev/null && writeline "@= User:admin locked." && crontab -r -u admin >/dev/null && userdel -r admin
+        writeline "@= User:admin and cronjobs deleted."
+        rm -rf /usr/local/vesta 2>/dev/null
+        rm -rf /root/vst_install_backups 2>/dev/null
+        writeline "@= Vestacp related-files removed."
+        writetitle "Vestacp already unistalled"
+    else
+        writetitle "Vestacp is not installed"
+    fi
+}
+#-------------------
+# Check if vesta control panel ssl enabled
+function vesta.ssl {
+        if grep -q [[:blank:]]ssl[[:blank:]] /usr/local/vesta/nginx/conf/nginx.conf; then
+                write "enabled"
+                return 0
+        else
+                write "disabled"
+                return 1
+        fi
+}
+#------------------
+# Disable vesta control panel ssl
+function vesta.ssl.disable {
+        local status=$(vesta.ssl)
+        if [ "${status:-0}" = "enabled" ]; then
+                sed -r -i -e "s/([[:space:]])ssl([[:space:]])/\1\#ssl/" /usr/local/vesta/nginx/conf/nginx.conf
+                service vesta restart
+                writeline "Vestacp SSL disabled."
+        else
+                writeline "Vestacp SSL already disabled."
+        fi
+}
+#-------------------
+# Enable vesta control panel ssl
+function vesta.ssl.enable {
+        local status=$(vesta.ssl)
+        if [ "${status:-0}" = "enabled" ]; then
+                writeline "Vestacp SSL already enabled."
+        else
+                sed -r -i -e "s/([[:space:]])#ssl([[:space:]])/\1\ssl/" /usr/local/vesta/nginx/conf/nginx.conf
+                service vesta restart
+                writeline "Vestacp SSL enabled."
+        fi
+}
+
+# apache2 config path
+function apache.config {
+        local osu=$(os.name)
+        local os="${osu,,}"
+        # detect os to do right steps
+        case "$os" in
+                ubuntu|debian)
+                        write "/etc/apache2/apache2.conf"
+                        return
+                ;;
+                redhat|centos)
+                        write "/etc/httpd/conf/httpd.conf"
+                        return
+                ;;
+        esac;
+}
+# apache2 service name
+function apache.name {
+        local osu=$(os.name)
+        local os="${osu,,}"
+        # detect os to do right steps
+        case "$os" in
+                ubuntu|debian)
+                        write "apache2"
+                        return
+                ;;
+                redhat|centos)
+                        write "httpd"
+                        return
+                ;;
+        esac;
+}
+
+#=========================================
+#              POSTGRESQL
+#=========================================
+#-------------------------
+# Get postgre short version
+function postgre.version {
+        sudo -u postgres psql --version 2>/dev/null | sed -n -r -e"s|([a-zA-Z]+)(.*)\ (([0-9]+)(\.[0-9]+){0,})(.*)$|\3|p"
+}
+#-----------------------
+# postgresql config path
+function postgre.config {
+        local osu=$(os.name)
+        local os="${osu,,}"
+        # detect os to do right steps
+        case "$os" in
+                ubuntu|debian)
+                        write "/etc/postgresql/$(postgre.version)/main/pg_hba.conf"
+                        return
+                ;;
+                redhat|centos)
+                        write "/var/lib/pgsql/data/pg_hba.conf"
+                        return
+                ;;
+        esac;
+}
+#-----------------------
+# postgresql server name {
+function postgre.name {
+        write "postgresql"
+}
+
+#--------------------------
+# Default password for postgre
+function postgre.pw {
+        write "pr@boyz123"
+}
+#-------------------------
+# Reset password for postgre
+# Return default password set by this script
+function postgre.resetpw {
+        sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$(postgre.pw)'" > /dev/null
+        write "Postgre password has been reset."
+}
+#-------------------------
+# Install
+function postgre.install {
+        local osu=$(os.name)
+        local os="${osu,,}"
+        writetitle "STARTING TO INSTALL POSTGRESQL"
+        # detect os to do right steps
+        case "$os" in
+                ubuntu|debian)
+                        #1. Install PostgreSQL packages
+                        apt-get install postgresql postgresql-contrib phppgadmin
+                        local pga1="/etc/phppgadmin/config.inc.php"
+                        local pga2="/etc/apache2/conf.d/phppgadmin"
+                ;;
+                redhat|centos)
+                        #1. Install PostgreSQL packages
+                        yum install postgresql postgresql-server postgresql-contrib phpPgAdmin
+                        #* If you have remi installed then don't forget to explicitly enable it.
+                        yum install --enablerepo=remi postgresql postgresql-server postgresql-contrib phpPgAdmin
+                        local pga1="/etc/phpPgAdmin/config.inc.php"
+                        local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
+                ;;
+        esac;
+
+        #2. Initialize database cluster
+        service $("postgre.name") initdb
+        writetitle "CONFIG AND SET PASSWORD"
+        write "Default password can be found at : bash tib postgre pw" | align center
+        drawline "-"
+        #3. Download hba configuration
+        wget http://c.vestacp.com/0.9.8/rhel/pg_hba.conf -O "$(postgre.config)"
+        #4. Start the server
+        service "$(postgre.name)" start
+        #5. Reset oracle user password
+        postgre.resetpw
+        #6. Enable pgsql databases support in vesta.
+        # Check if pgsql is not added
+        grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf || sed -i -r -e"s|^DB_SYSTEM\='(.*)'|DB_SYSTEM\='\1\,pgsql'|" "$(vesta.config)"
+        sed -i -r -e"s|^DB_SYSTEM\='(.*)\,\,(.*)'|DB_SYSTEM\='\1\,\2'|g" "$(vesta.config)"
+        #7. Register pg instance in control panel
+        /usr/local/vesta/bin/v-add-database-host pgsql localhost postgres pr@boyz123
+        #8. Download phpPgAdmin configuration
+        writetitle "CONFIG phpPgAdmin"
+        wget http://c.vestacp.com/0.9.8/rhel/pga.conf -O "$pga1"
+        wget http://c.vestacp.com/0.9.8/rhel/httpd-pga.conf -O "$pga2"
+        #9. Restart web server
+        service "$(apache.name)" restart
+        writetitle "Postgre version ""$(postgre.version)"" installed"
+}
+#------------------------
+# Uninstall postgre
+function postgre.uninstall {
+        /usr/local/vesta/bin/v-delete-database-host pgsql localhost
+        # Check if pgsql is not added
+        grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf && sed -i -r -e"s|^DB_SYSTEM\='(.*)pgsql(.*)'|DB_SYSTEM\='\1\2'|" "$(vesta.config)"
+        sed -i -r -e"s|^DB_SYSTEM\='(.*)\,\,(.*)'|DB_SYSTEM\='\1\,\2'|g" "$(vesta.config)"
+        service "$(postgre.name)" stop
+        local osu=$(os.name)
+        local os="${osu,,}"
+        # detect os to do right steps
+        case "$os" in
+                ubuntu|debian)
+                        local pga1="/etc/phppgadmin/config.inc.php"
+                        local pga2="/etc/apache2/conf.d/phppgadmin"
+                        sudo apt-get purge postgresql postgresql-contrib phppgadmin
+                ;;
+                redhat|centos)
+                        local pga1="/etc/phpPgAdmin/config.inc.php"
+                        local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
+                        yum remove --enablerepo=remi postgresql postgresql-server postgresql-contrib phpPgAdmin
+                        yum remove postgresql postgresql-server postgresql-contrib phpPgAdmin
+                ;;
+        esac;
+        rm -f "$pga1" "$pga2" "$(postgre.config)"
+        service "$(apache.name)"
+}
+
+
+#========= ULTILITIES ====================
+#=========================================
+# Update
+function update {
+    local url="https://raw.githubusercontent.com/TitanBox/tibvps/master/latest/tib"
+    curl "$url" 2>/dev/null > "tib-latest" && cp "tib-latest" $0 && writeline "This script has been updated."
+    rm -f "tib-latest"
+}
+#=========================================
+# Intro
+function about {
+    writetitle "TITANBOX VPS ULTILITY"
+    write " @author : HR" | align center
+    write " @copyright : TitanBox (c) 2015" | align center
+    drawline "-"
+    write " Thank you for using my software" | align center
+}
+#=========================================
+function _service_apply {
+    local name="$1"
+    local action="$2"
+    local supported=(
+        ""
+        "start"
+        "stop"
+        "restart"
+        "running"
+    )
+    # try to get realname with defined methods
+    local realname="${name}"".name"
+    if function.exists $realname; then
+        name="$( ${realname} )"
+    fi
+    if array.exists supported[@] $action && service.exists $name ; then
+        if [ "$action" = "" ]; then
+            writeline "service:${name} is installed."
+        elif [ "$action" = "running" ] && service.running $name ; then
+            writeline "service:${name} is running"
+        elif [ "$action" = "version" ] && service.running $name ; then
+            local version="${name}"".version"
+            function.exists $version && version="$( ${version} )" && writeline "service:${name} version is ${version}." || writeline "Can't get service:${name} version."
+        elif [ "$action" = "name" ] && service.running $name ; then
+            write "${name}"
+        else
+            writeline "service:${name} is ${action}ing"
+            service "$name" "$action" >/dev/null
+        fi
+    else
+        writeline "service:${name} is not installed or action:${action} is not allowed."
+    fi
+}
+#=========================================
+# INIT ARGUMENTS AND RUN PROGRAMS
+#=========================================
+function main {
+    program="$1"
+    service="$1"
+    action="$2"
+    for pragment in ${@:2}; do
+        program+=".$pragment"
+    done
+
+    if function.exists $program; then
+        $program
+    elif array.exists SERVICES[@] $service; then
+        _service_apply $service $action
+    else
+        writeline "MODULE NOT FOUND."
+    fi
+}
+
+main $@
+writeline
