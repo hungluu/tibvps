@@ -1,0 +1,133 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <title>Tibvps by TitanBox</title>
+
+    <link rel="stylesheet" href="stylesheets/styles.css">
+    <link rel="stylesheet" href="stylesheets/pygment_trac.css">
+    <script src="javascripts/scale.fix.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+  </head>
+  <body>
+    <div class="wrapper">
+      <header>
+        <h1>Tibvps</h1>
+        <p>An all-in-one installer for everything such as vestacp, postgresql, memcached ... for your vps</p>
+        <p class="view"><a href="https://github.com/TitanBox/tibvps">View the Project on GitHub <small>TitanBox/tibvps</small></a></p>
+        <ul>
+          <li><a href="https://github.com/TitanBox/tibvps/zipball/master">Download <strong>ZIP File</strong></a></li>
+          <li><a href="https://github.com/TitanBox/tibvps/tarball/master">Download <strong>TAR Ball</strong></a></li>
+          <li><a href="https://github.com/TitanBox/tibvps">View On <strong>GitHub</strong></a></li>
+        </ul>
+      </header>
+      <section>
+        <h2>
+<a id="language" class="anchor" href="#language" aria-hidden="true"><span class="octicon octicon-link"></span></a>Language</h2>
+
+<p><em>Bash shell</em></p>
+
+<hr>
+
+<h2>
+<a id="description" class="anchor" href="#description" aria-hidden="true"><span class="octicon octicon-link"></span></a>Description</h2>
+
+<p>This script is used base on <a href="//vestacp.com">VestaCP</a> or without it. For automatically installing, checking running status, uninstalling ... web dev softwares like memcached, mysql, postgresql, apache ... without putting a hand on any command lines.</p>
+
+<hr>
+
+<h2>
+<a id="installation" class="anchor" href="#installation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Installation</h2>
+
+<div class="highlight highlight-shell"><pre>curl -O https://raw.githubusercontent.com/TitanBox/tibvps/master/latest/tib</pre></div>
+
+<hr>
+
+<h2>
+<a id="example" class="anchor" href="#example" aria-hidden="true"><span class="octicon octicon-link"></span></a>Example</h2>
+
+<h3>
+<a id="check-existence" class="anchor" href="#check-existence" aria-hidden="true"><span class="octicon octicon-link"></span></a><em>Check existence</em>
+</h3>
+
+<div class="highlight highlight-shell"><pre>// check <span class="pl-k">if</span> vesta installed or check <span class="pl-k">if</span> the software supports your pc
+bash tib vesta
+--<span class="pl-k">&gt;</span> service:vesta is not installed or action: is not allowed.
+bash tib vesta supported
+--<span class="pl-k">&gt;</span> supported</pre></div>
+
+<h3>
+<a id="install-a-software" class="anchor" href="#install-a-software" aria-hidden="true"><span class="octicon octicon-link"></span></a><em>Install a software</em>
+</h3>
+
+<pre><code>// install VestaCP
+bash tib vesta install
+// install Memcached
+bash tib memcached install
+</code></pre>
+
+<h3>
+<a id="get-information" class="anchor" href="#get-information" aria-hidden="true"><span class="octicon octicon-link"></span></a><em>Get information</em>
+</h3>
+
+<pre><code>// get postgresql real service name or check if it is running
+bash tib postgre name
+--&gt; postgresql
+bash tib postgre running
+--&gt; running
+</code></pre>
+
+<h3>
+<a id="uninstall-software" class="anchor" href="#uninstall-software" aria-hidden="true"><span class="octicon octicon-link"></span></a><em>Uninstall software</em>
+</h3>
+
+<pre><code>// fresh uninstall for vestaCP
+bash tib vesta uninstall
+</code></pre>
+
+<h3>
+<a id="ultilites" class="anchor" href="#ultilites" aria-hidden="true"><span class="octicon octicon-link"></span></a><em>Ultilites</em>
+</h3>
+
+<pre><code>// os name
+bash tib os name
+// os version
+bash tib os version
+// reset all ip config
+bash tib ip reset
+// save current ip config
+bash tib ip save
+</code></pre>
+
+<p>And many other things. Use it with your freedom and wisdom <img class="emoji" title=":smile:" alt=":smile:" src="https://assets-cdn.github.com/images/icons/emoji/unicode/1f604.png" height="20" width="20" align="absmiddle"></p>
+
+<hr>
+
+<h2>
+<a id="update" class="anchor" href="#update" aria-hidden="true"><span class="octicon octicon-link"></span></a>Update</h2>
+
+<p>This script will update to the latest version when you call</p>
+
+<div class="highlight highlight-shell"><pre>bash tib update</pre></div>
+
+<p>By the way, if you want to see software credit</p>
+
+<div class="highlight highlight-shell"><pre>bash tib about</pre></div>
+
+<h2>
+<a id="good-luck" class="anchor" href="#good-luck" aria-hidden="true"><span class="octicon octicon-link"></span></a>Good luck</h2>
+      </section>
+    </div>
+    <footer>
+      <p>Project maintained by <a href="https://github.com/TitanBox">TitanBox</a></p>
+      <p>Hosted on GitHub Pages &mdash; Theme by <a href="https://github.com/orderedlist">orderedlist</a></p>
+    </footer>
+    <!--[if !IE]><script>fixScale(document);</script><![endif]-->
+    
+  </body>
+</html>
