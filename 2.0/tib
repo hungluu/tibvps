@@ -361,31 +361,6 @@ function apache.name {
 function postgre.version {
         sudo -u postgres psql --version 2>/dev/null | sed -n -r -e"s|([a-zA-Z]+)(.*)\ (([0-9]+)(\.[0-9]+){0,})(.*)$|\3|p"
 }
-#-------------------------
-# Fix postgresql bug that has
-# no service name on centOS
-function postgre {
-    local name="$(postgre.name)"
-    service.exists "$name" && writeline "PostgreSQL is installed." && return 0
-    "$(postgre.version)" | grep "" && writeline "PostgreSQL is installed." && return 1 || writeline "PostgreSQL is installed." && return 0
-}
-#-----------------------
-# postgresql config path
-function postgre.config {
-        local osu=$(os.name)
-        local os="${osu,,}"
-        # detect os to do right steps
-        case "$os" in
-                ubuntu|debian)
-                        write "/etc/postgresql/$(postgre.version)/main/pg_hba.conf"
-                        return
-                ;;
-                redhat|centos)
-                        write "/var/lib/pgsql/data/pg_hba.conf"
-                        return
-                ;;
-        esac;
-}
 #-----------------------
 # postgresql server name {
 function postgre.name {
@@ -403,6 +378,31 @@ function postgre.pw {
 function postgre.resetpw {
         sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$(postgre.pw)'" > /dev/null
         write "Postgre password has been reset."
+}
+#-------------------------
+# Fix postgresql bug that has
+# no service name on centOS
+function postgre {
+    local name="$(postgre.name)"
+    service.exists "$name" && writeline "service:$name is installed." && return 0
+    "$(postgre.version)" | grep "" && writeline "service:$name is installed." && return 1 || writeline "service:$name is installed." && return 0
+}
+#-----------------------
+# postgresql config path
+function postgre.config {
+        local osu=$(os.name)
+        local os="${osu,,}"
+        # detect os to do right steps
+        case "$os" in
+                ubuntu|debian)
+                        write "/etc/postgresql/$(postgre.version)/main/pg_hba.conf"
+                        return
+                ;;
+                redhat|centos)
+                        write "/var/lib/pgsql/data/pg_hba.conf"
+                        return
+                ;;
+        esac;
 }
 #-------------------------
 # Install
@@ -515,22 +515,32 @@ function _service_apply {
     if function.exists $realname; then
         name="$( ${realname} )"
     fi
-    if array.exists supported[@] $action && service.exists $name ; then
-        if [ "$action" = "" ]; then
-            writeline "service:${name} is installed."
-        elif [ "$action" = "running" ] && service.running $name ; then
-            writeline "service:${name} is running"
-        elif [ "$action" = "version" ] && service.running $name ; then
-            local version="${name}"".version"
-            function.exists $version && version="$( ${version} )" && writeline "service:${name} version is ${version}." || writeline "Can't get service:${name} version."
-        elif [ "$action" = "name" ] && service.running $name ; then
-            write "${name}"
-        else
-            writeline "service:${name} is ${action}ing"
-            service "$name" "$action" >/dev/null
-        fi
+    if array.exists supported[@] $action; then
+        case "$action" in
+            "")
+                if service.exists $name; then
+                    writeline "service:${name} is installed."
+                fi
+            ;;
+            "running")
+                if service.running $name; then
+                    writeline "service:${name} is running"
+                fi
+            ;;
+            "version")
+                local version="${name}"".version"
+                function.exists $version && version="$( ${version} )" && writeline "service:${name} version is ${version}." || writeline "Can't get service:${name} version."
+            ;;
+            "name")
+                write "${name}"
+            ;;
+            *)
+                writeline "service:${name} is ${action}ing"
+                service "$name" "$action" >/dev/null
+            ;;
+        esac;
     else
-        writeline "service:${name} is not installed or action:${action} is not allowed."
+        writeline "Action:${action} is not allowed."
     fi
 }
 #=========================================
