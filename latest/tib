@@ -11,6 +11,7 @@
 SERVICES=(
     "vesta"
     "postgre"
+    "apache"
 )
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -364,7 +365,8 @@ function postgre.version {
 # Fix postgresql bug that has
 # no service name on centOS
 function postgre {
-    service.exists "$(postgre.name)" && writeline "service:${name} is installed." && return 0
+    local name="$(postgre.name)"
+    service.exists "${name}" && writeline "service:${name} is installed." && return 0
     "$(postgre.version)" | grep "" && writeline "service:${name} is installed." && return 1 || writeline "service:${name} is installed." && return 0
 }
 #-----------------------
