@@ -384,8 +384,8 @@ function postgre.resetpw {
 # no service name on centOS
 function postgre {
 	local name="$(postgre.name)"
-	service.exists "$name" && writeline "service:$name is installed." && return 0
-	"$(postgre.version)" | grep "" && writeline "service:$name is installed." && return 1 || writeline "service:$name is installed." && return 0
+	service.exists "$name" && writeline "$name is installed." && return 0
+	"$(postgre.version)" | grep "" && writeline "$name is installed." && return 1 || writeline "$name is installed." && return 0
 }
 #-----------------------
 # postgresql config path
