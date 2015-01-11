@@ -507,7 +507,7 @@ function about {
 	write " Thank you for using my software" | align center
 }
 #=========================================
-function _service_apply {
+function service_apply {
 	local name="$1"
 	local action="$2"
 	local supported=(
@@ -564,7 +564,7 @@ function main {
 	if function.exists $program; then
 		$program
 	elif array.exists SERVICES[@] $service; then
-		_service_apply $service $action
+		service_apply $service $action
 	else
 		writeline "MODULE NOT FOUND."
 	fi
