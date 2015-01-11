@@ -270,7 +270,7 @@ function vesta.uninstall {
 				rm -f /etc/apt/sources.list.d/vesta.list 2>/dev/null
 				writeline "@= Vesta repo removed."
 				writetitle " Unistalling Vestacp components"
-				apt-get -y purge "${packages[@]}" >/dev/null
+				apt-get -y purge "${packages[@]}"
 				# clear unneeded dependencies
 				writetitle "Clean up packages"
 				apt-get -y autoremove
@@ -280,7 +280,7 @@ function vesta.uninstall {
 				rm -f /etc/yum.repos.d/vesta.repo 2>/dev/null
 				writeline "@= Vesta repo removed."
 				writetitle " Unistalling Vestacp components"
-				yum -y remove "${packages[@]}" >/dev/null
+				yum -y remove "${packages[@]}"
 				# clear unneeded dependencies
 				writetitle "Clean up packages"
 				yum clean all
