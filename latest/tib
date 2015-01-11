@@ -327,7 +327,7 @@ function vesta.uninstall {
 		userdel -r admin
 		writeline "@= User:admin and cronjobs deleted."
 		yum -y remove exim* >/dev/null && yum clean all
-		apt-get remove exim* >/dev/null && apt-get autoremove
+		apt-get -y purge exim* >/dev/null && apt-get autoremove
 		rm -rf /usr/local/vesta 2>/dev/null
 		rm -rf /root/vst_install_backups 2>/dev/null
 		writeline "@= Vestacp related-files removed."
@@ -677,7 +677,7 @@ function memcached.uninstall {
 				service memcached stop
 				# uninstall
 				chkconfig memcached off
-				apt-get -y remove memcached php5-memcached
+				apt-get -y purge memcached php5-memcached
 				# clear unneeded dependencies
 				writetitle "Clean up packages"
 				apt-get -y autoremove
