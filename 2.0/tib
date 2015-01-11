@@ -534,32 +534,32 @@ function service_apply {
 	case "$action" in
 		"")
 			if service.exists $name; then
-				writeline "service:${name} is installed."
+				write "service:${name} is installed."
 			else
-				writeline "service:${name} is not installed."
+				write "service:${name} is not installed."
 			fi
 		;;
 		"running")
 			if service.running $name; then
-				writeline "service:${name} is running"
+				write "service:${name} is running"
 					else
-						writeline "service:${name} is not running"
+						write "service:${name} is not running"
 			fi
 		;;
 		"version")
 			local version="${name}"".version"
-			function.exists $version && version="$( ${version} )" && writeline "service:${name} version is ${version}." || writeline "Can't get service:${name} version."
+			function.exists $version && version="$( ${version} )" && write "service:${name} version is ${version}." || write "Can't get service:${name} version."
 		;;
 		"name")
 			write "${name}"
 		;;
 		*)
-			writeline "service:${name} is ${action}ing"
+			write "service:${name} is ${action}ing"
 			service "$name" "$action" >/dev/null
 		;;
 	esac;
 	else
-		writeline "Action:${action} is not allowed."
+		write "Action:${action} is not allowed."
 	fi
 }
 #=========================================
