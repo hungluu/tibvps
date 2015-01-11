@@ -220,7 +220,7 @@ function vesta.install {
 		curl -O http://vestacp.com/pub/vst-install.sh
 		bash vst-install.sh && writeline "VestaCP installed."
 		# delete installer after done
-		rm -f $PATH"/vst-install.sh"
+		rm -f $PATH"/vst-install.sh" $PATH"/vst-install-rhel.sh"
 		writetitle "SUCCESSFUL INSTALLING VESTACP version ""$(vesta.version)"
 	else
 		writeline "Vestacp not supported for your os."
@@ -247,16 +247,15 @@ function vesta.uninstall {
 		# apache centos
 		"httpd httpd-tools apr apr-util"
 	)
-	writetitle "Unistalling Vestacp"
+	local osu="$(os.name)"
+	local os="${osu,,}"
+	writetitle "Unistalling Vestacp $(vesta.version) on your ${os}"
 	if service.running "vesta"; then
 		service "vesta" stop
 	fi
 	writeline "@= Vestacp sevice stopped"
 	# kill named process
 	kill "$(pgrep named)"
-	local osu="$(os.name)"
-	local os="${osu,,}"
-	writeline "@= Detected OS is $osu."
 	# detect os to do right steps
 	case "$os" in
 		ubuntu|debian)
