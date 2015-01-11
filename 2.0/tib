@@ -386,7 +386,7 @@ function postgre.resetpw {
 function postgre {
     local name="$(postgre.name)"
     service.exists "$name" && writeline "$name is installed." && return 0
-    grep "" <<< "$(postgre.version)" >/dev/null && writeline "$name is installed." && return 1 || writeline "$name is installed." && return 0
+    grep ^[0-9] <<< "$(postgre.version)" >/dev/null && writeline "$name is installed." && return 1 || writeline "$name is installed." && return 0
 }
 #-----------------------
 # postgresql config path
