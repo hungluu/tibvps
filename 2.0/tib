@@ -535,13 +535,14 @@ function postgre.install {
 # Uninstall postgre
 function postgre.uninstall {
 	if postgre >/dev/null; then
+		local osu=$(os.name)
+		local os="${osu,,}"
+		writetitle "UNINSTALLING POSTGRESQL $(postgre.version) on your ${osu}"
 		/usr/local/vesta/bin/v-delete-database-host pgsql localhost
 		# Check if pgsql is not added
 		grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf && sed -i -r -e"s|^DB_SYSTEM\='(.*)\,pgsql(.*)'|DB_SYSTEM\='\1\2'|" "$(vesta.config)"
 		sed -i -r -e"s|^DB_SYSTEM\='(.*)\,\,(.*)'|DB_SYSTEM\='\1\,\2'|g" "$(vesta.config)"
 		service "$(postgre.name)" stop
-		local osu=$(os.name)
-		local os="${osu,,}"
 		# detect os to do right steps
 		case "$os" in
 			ubuntu|debian)
