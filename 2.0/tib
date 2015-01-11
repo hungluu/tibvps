@@ -542,19 +542,14 @@ function postgre.uninstall {
 #=========================================
 
 #-------------------------
-# Get memcached version
-function memcached.version {
-	memcached -h
-}
-#-------------------------
 # Return memcached config path
 function memcached.config {
 	local osu="$(os.name)"
 	local os="${osu,,}"
 	case $os in
 		centos|redhat)
-			write "/etc/sysconfig/memcache"
- d	   ;;
+			write "/etc/sysconfig/memcached"
+		;;
 		ubuntu|debian)
 			write "/etc/memcached.conf"
 		;;
@@ -563,7 +558,17 @@ function memcached.config {
 #-------------------------
 # Get memcached port
 function memcached.port {
-	echo 1
+	sed -nre "s|PORT=\"(.*)\"|\1|p" "$(memcached.config)"
+}
+#--------------------------
+# Stats
+function memcached.stats {
+	memcached-tool 127.0.0.1:"$(memcached.port)" stats
+}
+#-------------------------
+# Get memcached version
+function memcached.version {
+	sed -n -r -e"s|(.*)version(.*)\ (([0-9]+)(\.[0-9]+){0,})(.*)$|\3|p" <<< $( memcached.stats )
 }
 #-------------------------
 # Install memcached
@@ -587,7 +592,7 @@ function memcached.install {
 			service memcached start
 			service "$(apache.name)" restart
 			service "nginx" restart
-			writetitle "Memcached installed"
+			writetitle "Memcached $(memcached.version) installed"
 		;;
 		ubuntu|debian)
 			writetitle "Starting to install memcached on your ${osu}"
@@ -599,14 +604,43 @@ function memcached.install {
 			service memcached start
 			service "$(apache.name)" restart
 			service "nginx" restart
-			writetitle "Memcached installed"
+			writetitle "Memcached $(memcached.version) installed"
 		;;
 	esac;
 }
 #--------------------------
 # Uninstall memcached
 function memcached.uninstall {
-	echo 1
+	if service.exists memcached; then
+		local osu="$(os.name)"
+		local os="${osu,,}"
+		case $os in
+			centos|redhat|rhel|fedora)
+				writetitle "Starting to uninstall memcached $(memcached.version) on your ${osu}"
+				service memcached stop
+				# uninstall
+				chkconfig memcached off
+				yum -y remove php-pecl-memcached php-pecl-memcache memcached memcached-selinux
+				service memcached start
+				service "$(apache.name)" restart
+				service "nginx" restart
+				writetitle "Memcached uninstalled"
+			;;
+			ubuntu|debian)
+				writetitle "Starting to install memcached $(memcached.version) on your ${osu}"
+				service memcached stop
+				# uninstall
+				chkconfig memcached off
+				apt-get -y remove memcached php5-memcache
+				service memcached start
+				service "$(apache.name)" restart
+				service "nginx" restart
+				writetitle "Memcached uninstalled"
+			;;
+		esac;
+	else
+		writeline "Memcached not installed." && return 1
+	fi
 }
 #--------------------------
 # Check php session used with memcached
@@ -637,11 +671,6 @@ function memcached.remote.active {
 # Deactive remote access
 function memcached.remote.deactive {
 	echo 1
-}
-#--------------------------
-# Stats
-function memcached.stats {
-	memcached-tool 127.0.0.1:11211 stats
 }
 
 
