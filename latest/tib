@@ -322,7 +322,7 @@ function vesta.uninstall {
 		writeline "@= Vestacp related-files removed."
 		writetitle "Vestacp unistalled"
 	else
-		writetitle "Vestacp is not installed"
+		writeline "Vestacp is not installed"
 	fi
 }
 #-------------------
