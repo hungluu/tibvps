@@ -115,7 +115,7 @@ function os {
 	elif [ -f "/etc/lsb-release" ] || function.exists "lsb_release"; then
 		lsb_release -d
 	else
-		writeline ""
+		write ""
 		return 1
 	fi
 }
@@ -391,7 +391,7 @@ function postgre.running {
 function postgre {
 	local name="$(postgre.name)"
 	if service.exists "$name"; then
-		writeline "service:$name is installed." && return 0
+		write "service:$name is installed." && return 0
 	fi
 	echo "$(postgre.version)" | grep ^[0-9] >/dev/null && write "service:$name is installed." && return 0 || write "service:$name is not installed." && return 1
 }
@@ -502,7 +502,7 @@ function postgre.uninstall {
 # Update
 function update {
 	local url="https://raw.githubusercontent.com/TitanBox/tibvps/master/latest/tib"
-	curl "$url" 2>/dev/null > "tib-latest" && cp "tib-latest" $0 && writeline "This script has been updated."
+	curl "$url" 2>/dev/null > "tib-latest" && cp "tib-latest" $0 && write "This script has been updated."
 	rm -f "tib-latest"
 }
 #=========================================
@@ -578,7 +578,7 @@ function main {
 	elif array.exists SERVICES[@] $service; then
 		service_apply $service $action
 	else
-		writeline "MODULE NOT FOUND."
+		write "MODULE NOT FOUND."
 	fi
 }
 
