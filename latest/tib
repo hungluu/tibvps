@@ -12,6 +12,7 @@ SERVICES=(
 	"vesta"
 	"postgre"
 	"apache"
+	"memcached"
 )
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
@@ -143,6 +144,10 @@ function array.exists {
 	done
 	return 1
 }
+#--------------------
+# Check if string match all regexp in array
+# @param $regexp[@]
+# @param $string
 function array.regexp {
 	declare -a haystack=("${!1}")
 	local needle=${2}
@@ -153,22 +158,33 @@ function array.regexp {
 	done
 	return 1
 }
+#--------------------
+# Reset ip tables
 function ip.reset {
 	iptables --flush && iptables --policy INPUT ACCEPT && service iptables save && service iptables stop && service iptables start
 }
-
+#--------------------
+# Save current iptable config
 function ip.save {
 	service iptables save && service iptables stop && service iptables start
 }
+
 #=========================================
 # VESTACP
 #=========================================
+
+#------------------------
+# Vesta config file
 function vesta.config {
 	write "/usr/local/vesta/conf/vesta.conf"
 }
+#------------------------
+# Vesta version
 function vesta.version {
 	sed -nre "s|^VERSION\='([0-9\.]+)'|\1|p" "$(vesta.config)"
 }
+#------------------------
+# Vesta supported
 function vesta.supported {
 	local supported=(
 		^ubuntu12
@@ -184,10 +200,22 @@ function vesta.supported {
 	local current="${osu,,}""$(os.version)"
 	array.regexp supported[@] $current && write "supported" && return 0 || write "not supported" && return 1
 }
+#------------------------
+# Install vesta
 function vesta.install {
 	if service.exists "vesta"; then
 		writeline "VestaCP already installed in your system."
 	elif vesta.supported "vesta" >/dev/null; then
+		local osu="$(os.name)"
+		local os="${osu,,}"
+		case "$os" in
+			ubuntu|debian)
+				apt-get update
+			;;
+			redhat|centos)
+				yum update
+			;;
+		esac;
 		writeline "Installing VestaCP. Do not cut connection before it finishes ..."
 		curl -O http://vestacp.com/pub/vst-install.sh
 		bash vst-install.sh && writeline "VestaCP installed."
@@ -198,6 +226,8 @@ function vesta.install {
 		writeline "Vestacp not supported for your os."
 	fi
 }
+#------------------------
+# Uninstall vesta
 function vesta.uninstall {
 	if  service.exists "vesta"; then
 	# packages installed by vesta
@@ -320,6 +350,11 @@ function vesta.ssl.enable {
 	fi
 }
 
+#=========================================
+# APACHE
+#=========================================
+
+#--------------------------
 # apache2 config path
 function apache.config {
 	local osu=$(os.name)
@@ -336,6 +371,7 @@ function apache.config {
 		;;
 	esac;
 }
+#-------------------------
 # apache2 service name
 function apache.name {
 	local osu=$(os.name)
@@ -356,6 +392,7 @@ function apache.name {
 #=========================================
 #	  POSTGRESQL
 #=========================================
+
 #-------------------------
 # Get postgre short version
 function postgre.version {
@@ -425,12 +462,16 @@ function postgre.install {
 	case "$os" in
 		ubuntu|debian)
 			#1. Install PostgreSQL packages
+			# ensure packages are up-to-date
+			apt-get update
 			apt-get install postgresql postgresql-contrib phppgadmin
 			local pga1="/etc/phppgadmin/config.inc.php"
 			local pga2="/etc/apache2/conf.d/phppgadmin"
 		;;
 		redhat|centos)
 			#1. Install PostgreSQL packages
+			# ensure packages are up-to-date
+			yum update
 			yum install postgresql postgresql-server postgresql-contrib phpPgAdmin
 			#* If you have remi installed then don't forget to explicitly enable it.
 			yum install --enablerepo=remi postgresql postgresql-server postgresql-contrib phpPgAdmin
@@ -496,8 +537,98 @@ function postgre.uninstall {
 	fi
 }
 
+#=========================================
+#   MEMCACHED
+#=========================================
 
-#========= ULTILITIES ====================
+#-------------------------
+# Get memcached version
+function memcached.version {
+	memcached -h
+}
+#-------------------------
+# Return memcached config path
+function memcached.config {
+	local osu="$(os.name)"
+	local os="${osu,,}"
+	case $os in
+		centos|redhat)
+			write "/etc/sysconfig/memcache"
+ d	   ;;
+		ubuntu|debian)
+			write "/etc/memcached.conf"
+		;;
+	esac
+}
+#-------------------------
+# Get memcached port
+function memcached.port {
+}
+#-------------------------
+# Install memcached
+function memcached.install {
+	if service.exists memcached; then
+		writeline "Memcached already installed." && return 1
+	fi
+	local osu="$(os.name)"
+	local os="${osu,,}"
+	case $os in
+		centos|redhat|rhel|fedora)
+			writetitle "Starting to install memcached on your ${osu}"
+			# enable EPEL repo
+			rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm
+			# update packages
+			yum update
+			# install
+			yum install memcached php-pecl-memcache memcached-selinux
+			chkconfig memcached on
+			service memcached start
+			service "$(apache.name)" restart
+			writetitle "Memcached installed"
+		;;
+		ubuntu|debian)
+			writetitle "Starting to install memcached on your ${osu}"
+			# update packages
+			apt-get update
+			# install
+			apt-get install memcached php5-memcache
+			chkconfig memcached on
+			service memcached start
+			service "$(apache.name)" restart
+			writetitle "Memcached installed"
+		;;
+	esac
+}
+#--------------------------
+# Uninstall memcached
+function memcached.uninstall {}
+#--------------------------
+# Check php session used with memcached
+function memcached.session {}
+#--------------------------
+# Active php session with memcached
+function memcached.session.active {}
+#--------------------------
+# Deactive php session with memcached
+function memcached.session.deactive {}
+#--------------------------
+# Check remote access status
+function memcached.remote {}
+#--------------------------
+# Active remote access
+function memcached.remote.active {}
+#--------------------------
+# Deactive remote access
+function memcached.remote.deactive {}
+#--------------------------
+# Stats
+function memcached.stats {
+	memcached-tool 127.0.0.1:11211 stats
+}
+
+
+#=========================================
+#		SCRIPT ULTILITES
 #=========================================
 # Update
 function update {
