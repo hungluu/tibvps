@@ -245,7 +245,6 @@ function vesta.uninstall {
 			"nginx*"
 			"dovecot*"
 			"vsftpd*"
-			"exim*"
 			"messagebus*"
 			"bind*"
 			"httpd"
@@ -316,6 +315,8 @@ function vesta.uninstall {
 		crontab -r -u admin >/dev/null
 		userdel -r admin
 		writeline "@= User:admin and cronjobs deleted."
+		yum -y remove exim* >/dev/null
+		apt-get remove exim* >/dev/null
 		rm -rf /usr/local/vesta 2>/dev/null
 		rm -rf /root/vst_install_backups 2>/dev/null
 		writeline "@= Vestacp related-files removed."
