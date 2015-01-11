@@ -410,7 +410,7 @@ function postgre.config {
 #-------------------------
 # Install
 function postgre.install {
-		if [ postgre -eq 0 ]; then
+		if postgre >/dev/null; then
 			writeline "PostgreSQL already installed" && return 1
 		fi
 		local osu=$(os.name)
@@ -462,32 +462,33 @@ function postgre.install {
 #------------------------
 # Uninstall postgre
 function postgre.uninstall {
-		if [ postgre -eq 1 ]; then
+		if postgre >/dev/null; then
+			/usr/local/vesta/bin/v-delete-database-host pgsql localhost
+			# Check if pgsql is not added
+			grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf && sed -i -r -e"s|^DB_SYSTEM\='(.*)\,pgsql(.*)'|DB_SYSTEM\='\1\2'|" "$(vesta.config)"
+			sed -i -r -e"s|^DB_SYSTEM\='(.*)\,\,(.*)'|DB_SYSTEM\='\1\,\2'|g" "$(vesta.config)"
+			service "$(postgre.name)" stop
+			local osu=$(os.name)
+			local os="${osu,,}"
+			# detect os to do right steps
+			case "$os" in
+					ubuntu|debian)
+							local pga1="/etc/phppgadmin/config.inc.php"
+							local pga2="/etc/apache2/conf.d/phppgadmin"
+							sudo apt-get -y purge postgresql postgresql-contrib phppgadmin
+					;;
+					redhat|centos)
+							local pga1="/etc/phpPgAdmin/config.inc.php"
+							local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
+							yum remove --enablerepo=remi -y postgresql postgresql-server postgresql-contrib phpPgAdmin
+							yum remove -y postgresql postgresql-server postgresql-contrib phpPgAdmin
+					;;
+			esac;
+			rm -f "$pga1" "$pga2" "$(postgre.config)"
+			service "$(apache.name)" restart
+		else
 			writeline "PostgreSQL not installed" && return 1
 		fi
-		/usr/local/vesta/bin/v-delete-database-host pgsql localhost
-		# Check if pgsql is not added
-		grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf && sed -i -r -e"s|^DB_SYSTEM\='(.*)\,pgsql(.*)'|DB_SYSTEM\='\1\2'|" "$(vesta.config)"
-		sed -i -r -e"s|^DB_SYSTEM\='(.*)\,\,(.*)'|DB_SYSTEM\='\1\,\2'|g" "$(vesta.config)"
-		service "$(postgre.name)" stop
-		local osu=$(os.name)
-		local os="${osu,,}"
-		# detect os to do right steps
-		case "$os" in
-				ubuntu|debian)
-						local pga1="/etc/phppgadmin/config.inc.php"
-						local pga2="/etc/apache2/conf.d/phppgadmin"
-						sudo apt-get -y purge postgresql postgresql-contrib phppgadmin
-				;;
-				redhat|centos)
-						local pga1="/etc/phpPgAdmin/config.inc.php"
-						local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
-						yum remove --enablerepo=remi -y postgresql postgresql-server postgresql-contrib phpPgAdmin
-						yum remove -y postgresql postgresql-server postgresql-contrib phpPgAdmin
-				;;
-		esac;
-		rm -f "$pga1" "$pga2" "$(postgre.config)"
-		service "$(apache.name)"
 }
 
 
