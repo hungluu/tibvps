@@ -234,91 +234,93 @@ function vesta.install {
 # Uninstall vesta
 function vesta.uninstall {
 	if  service.exists "vesta"; then
-	# packages installed by vesta
-	# becuz vesta needs a fresh server
-	# these packages should not be
-	# installed before vesta
-	local packages=(
-		"apache*"
-		"fail2ban*"
-		"mysql*"
-		"nginx*"
-		"dovecot*"
-		"vsftpd*"
-		"exim*"
-		"messagebus*"
-		"bind*"
-		# apache centos
-		"httpd httpd-tools apr apr-util"
-	)
-	local osu="$(os.name)"
-	local os="${osu,,}"
-	writetitle "Unistalling Vestacp $(vesta.version) on your ${os}"
-	if service.running "vesta"; then
-		service "vesta" stop
-	fi
-	writeline "@= Vestacp sevice stopped"
-	# kill named process
-	kill "$(pgrep named)"
-	# detect os to do right steps
-	case "$os" in
-		ubuntu|debian)
-			writeline "@= Unistalling vesta*" && apt-get -y purge vesta* >/dev/null && writeline " :: uninstalled"
-			rm -f /etc/apt/sources.list.d/vesta.list 2>/dev/null
-			writeline "@= Vesta repo removed."
-			writetitle " Unistalling Vestacp components"
-			apt-get -y purge "${packages[@]}" >/dev/null
-			# clear unneeded dependencies
-			writetitle "Clean up packages"
-			apt-get -y autoremove
-		;;
-		redhat|centos)
-			writeline "@= Unistalling vesta*" && yum -y remove vesta* >/dev/null && writeline " :: uninstalled"
-			rm -f /etc/yum.repos.d/vesta.repo 2>/dev/null
-			writeline "@= Vesta repo removed."
-			writetitle " Unistalling Vestacp components"
-			yum -y remove "${packages[@]}" >/dev/null
-			# clear unneeded dependencies
-			writetitle "Clean up packages"
-			yum clean all
-		;;
-		*)
-			writeline "Not supported os for Vestacp. Did you really installed it on your system."
-		;;
-	esac;
-	# reset iptables rules
-	writetitle "Reset iptables and vesta chains"
-	ip.reset
-	# iptable chains added
-	# when installing vesta
-	local chains=(
-		"fail2ban-VESTA"
-		"fail2ban-SSH"
-		"fail2ban-MAIL"
-		"vesta"
-	)
-	for k in "${chains[@]}"; do
-		writeline "@= Removing ${k}"
-		iptables -X "${k}"
-		writeline " :: removed"
-	done
-	ip.save
-	writeline "@= IP configs reset."
-	# remove all other services not properly uninstalled
-	# delete admin user and cronjobs
-	writetitle "Remove user and cronjobs"
-	rm -rf /home/admin
-	passwd -l admin >/dev/null
-	writeline "@= User:admin locked."
-	crontab -r -u admin >/dev/null
-	userdel -r admin
-	writeline "@= User:admin and cronjobs deleted."
-	rm -rf /usr/local/vesta 2>/dev/null
-	rm -rf /root/vst_install_backups 2>/dev/null
-	writeline "@= Vestacp related-files removed."
-	writetitle "Vestacp unistalled"
+		# packages installed by vesta
+		# becuz vesta needs a fresh server
+		# these packages should not be
+		# installed before vesta
+		local packages=(
+			"apache*"
+			"fail2ban*"
+			"mysql*"
+			"nginx*"
+			"dovecot*"
+			"vsftpd*"
+			"exim*"
+			"messagebus*"
+			"bind*"
+			"httpd"
+			"httpd-tools"
+			"apr"
+			"apr-util"
+		)
+		local osu="$(os.name)"
+		local os="${osu,,}"
+		writetitle "Unistalling Vestacp $(vesta.version) on your ${os}"
+		if service.running "vesta"; then
+			service "vesta" stop
+		fi
+		writeline "@= Vestacp sevice stopped"
+		# kill named process
+		kill "$(pgrep named)"
+		# detect os to do right steps
+		case "$os" in
+			ubuntu|debian)
+				writeline "@= Unistalling vesta*" && apt-get -y purge vesta* >/dev/null && writeline " :: uninstalled"
+				rm -f /etc/apt/sources.list.d/vesta.list 2>/dev/null
+				writeline "@= Vesta repo removed."
+				writetitle " Unistalling Vestacp components"
+				apt-get -y purge "${packages[@]}" >/dev/null
+				# clear unneeded dependencies
+				writetitle "Clean up packages"
+				apt-get -y autoremove
+			;;
+			redhat|centos)
+				writeline "@= Unistalling vesta*" && yum -y remove vesta* >/dev/null && writeline " :: uninstalled"
+				rm -f /etc/yum.repos.d/vesta.repo 2>/dev/null
+				writeline "@= Vesta repo removed."
+				writetitle " Unistalling Vestacp components"
+				yum -y remove "${packages[@]}" >/dev/null
+				# clear unneeded dependencies
+				writetitle "Clean up packages"
+				yum clean all
+			;;
+			*)
+				writeline "Not supported os for Vestacp. Did you really installed it on your system."
+			;;
+		esac;
+		# reset iptables rules
+		writetitle "Reset iptables and vesta chains"
+		ip.reset
+		# iptable chains added
+		# when installing vesta
+		local chains=(
+			"fail2ban-VESTA"
+			"fail2ban-SSH"
+			"fail2ban-MAIL"
+			"vesta"
+		)
+		for k in "${chains[@]}"; do
+			writeline "@= Removing ${k}"
+			iptables -X "${k}"
+			writeline " :: removed"
+		done
+		ip.save
+		writeline "@= IP configs reset."
+		# remove all other services not properly uninstalled
+		# delete admin user and cronjobs
+		writetitle "Remove user and cronjobs"
+		rm -rf /home/admin
+		passwd -l admin >/dev/null
+		writeline "@= User:admin locked."
+		crontab -r -u admin >/dev/null
+		userdel -r admin
+		writeline "@= User:admin and cronjobs deleted."
+		rm -rf /usr/local/vesta 2>/dev/null
+		rm -rf /root/vst_install_backups 2>/dev/null
+		writeline "@= Vestacp related-files removed."
+		writetitle "Vestacp unistalled"
 	else
-	writetitle "Vestacp is not installed"
+		writetitle "Vestacp is not installed"
 	fi
 }
 #-------------------
