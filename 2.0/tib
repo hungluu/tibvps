@@ -252,6 +252,7 @@ function vesta.uninstall {
 			"httpd-tools"
 			"apr"
 			"apr-util"
+			"php*"
 		)
 		local osu="$(os.name)"
 		local os="${osu,,}"
@@ -535,12 +536,17 @@ function postgre.uninstall {
 				local pga1="/etc/phppgadmin/config.inc.php"
 				local pga2="/etc/apache2/conf.d/phppgadmin"
 				apt-get -y purge postgresql postgresql-contrib phppgadmin
+				# clear unneeded dependencies
+				writetitle "Clean up packages"
 				apt-get -y autoremove
 			;;
 			redhat|centos)
 				local pga1="/etc/phpPgAdmin/config.inc.php"
 				local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
 				yum -y remove postgresql postgresql-server postgresql-contrib phpPgAdmin
+				# clear unneeded dependencies
+				writetitle "Clean up packages"
+				yum clean all
 			;;
 		esac;
 		rm -f "$pga1" "$pga2" "$(postgre.config)"
@@ -638,6 +644,9 @@ function memcached.uninstall {
 				# uninstall
 				chkconfig memcached off
 				yum -y remove php-pecl-memcached php-pecl-memcache memcached memcached-selinux
+				# clear unneeded dependencies
+				writetitle "Clean up packages"
+				yum clean all
 				service "$(apache.name)" restart
 				service "nginx" restart
 				writetitle "Memcached uninstalled"
@@ -648,6 +657,8 @@ function memcached.uninstall {
 				# uninstall
 				chkconfig memcached off
 				apt-get -y remove memcached php5-memcached
+				# clear unneeded dependencies
+				writetitle "Clean up packages"
 				apt-get -y autoremove
 				service "$(apache.name)" restart
 				service "nginx" restart
