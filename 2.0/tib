@@ -280,7 +280,9 @@ function vesta.uninstall {
 				rm -f /etc/apt/sources.list.d/vesta.list 2>/dev/null
 				writeline "@= Vesta repo removed."
 				writetitle " Unistalling Vestacp components"
-				apt-get -y purge "${packages[@]}"
+				for i in packages[@]; do
+					apt-get -y purge $i
+				done
 				# clear unneeded dependencies
 				writetitle "Clean up packages"
 				apt-get -y autoremove
@@ -290,7 +292,9 @@ function vesta.uninstall {
 				rm -f /etc/yum.repos.d/vesta.repo 2>/dev/null
 				writeline "@= Vesta repo removed."
 				writetitle " Unistalling Vestacp components"
-				yum -y remove "${packages[@]}"
+				for i in packages[@]; do
+					yum -y remove $i
+				done
 				# clear unneeded dependencies
 				writetitle "Clean up packages"
 				yum clean all
@@ -327,7 +331,7 @@ function vesta.uninstall {
 		userdel -r admin
 		writeline "@= User:admin and cronjobs deleted."
 		yum -y remove exim* >/dev/null && yum clean all
-		apt-get -y purge exim* >/dev/null && apt-get autoremove
+		apt-get -y purge exim* >/dev/null && apt-get -y autoremove
 		rm -rf /usr/local/vesta 2>/dev/null
 		rm -rf /root/vst_install_backups 2>/dev/null
 		writeline "@= Vestacp related-files removed."
