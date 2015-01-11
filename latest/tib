@@ -410,7 +410,7 @@ function postgre.config {
 #-------------------------
 # Install
 function postgre.install {
-        if postgre
+        postgre && writeline "POSTGRESQL already installed" && return 1
 		local osu=$(os.name)
 		local os="${osu,,}"
 		writetitle "STARTING TO INSTALL POSTGRESQL"
@@ -460,6 +460,7 @@ function postgre.install {
 #------------------------
 # Uninstall postgre
 function postgre.uninstall {
+        postgre || writeline "POSTGRESQL already installed" && return 1
 		/usr/local/vesta/bin/v-delete-database-host pgsql localhost
 		# Check if pgsql is not added
 		grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf && sed -i -r -e"s|^DB_SYSTEM\='(.*)\,pgsql(.*)'|DB_SYSTEM\='\1\2'|" "$(vesta.config)"
