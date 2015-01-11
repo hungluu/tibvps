@@ -576,15 +576,17 @@ function memcached.install {
 	case $os in
 		centos|redhat|rhel|fedora)
 			writetitle "Starting to install memcached on your ${osu}"
-			# enable EPEL repo
-			rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm
+			# enable remi
+			rpm -Uvh http://download.fedoraproject.org/pub/epel/6/i386/epel-release-6-8.noarch.rpm
+			rpm -Uvh http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
 			# update packages
 			yum update
 			# install
-			yum install memcached php-pecl-memcache memcached-selinux
+			yum --enablerepo=remi,remi-php55 install php-pecl-memcached php-pecl-memcache memcached memcached-selinux
 			chkconfig memcached on
 			service memcached start
 			service "$(apache.name)" restart
+			service "nginx" restart
 			writetitle "Memcached installed"
 		;;
 		ubuntu|debian)
@@ -596,6 +598,7 @@ function memcached.install {
 			chkconfig memcached on
 			service memcached start
 			service "$(apache.name)" restart
+			service "nginx" restart
 			writetitle "Memcached installed"
 		;;
 	esac;
