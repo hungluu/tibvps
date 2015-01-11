@@ -15,9 +15,9 @@ SERVICES=(
 )
 SOURCE="${BASH_SOURCE[0]}"
 while [ -h "$SOURCE" ]; do # resolve $SOURCE until the file is no longer a symlink
-  DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
-  SOURCE="$(readlink "$SOURCE")"
-  [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+	DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
+	SOURCE="$(readlink "$SOURCE")"
+	[[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE" # if $SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
 done
 DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 #=================
@@ -74,8 +74,9 @@ function align {
 	drawtext "${text}\n" $distance
 }
 function writetitle {
+	writeline
 	drawline "="
-	write ${1^^} | align center
+	write "${1^^}" | align center
 	drawline "="
 }
 #----------------
@@ -93,7 +94,7 @@ function function.exists {
 # Service existence
 # @param $name
 function service.exists {
-	service --status-all 2> /dev/null | grep ^$1 >/dev/null
+	service --status-all 2>/dev/null | grep ^$1 >/dev/null
 }
 #-----------------------
 # Service running
@@ -354,7 +355,7 @@ function apache.name {
 }
 
 #=========================================
-#			  POSTGRESQL
+#			 POSTGRESQL
 #=========================================
 #-------------------------
 # Get postgre short version
@@ -376,7 +377,7 @@ function postgre.pw {
 # Reset password for postgre
 # Return default password set by this script
 function postgre.resetpw {
-		sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$(postgre.pw)'" > /dev/null
+		sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$(postgre.pw)'" >/dev/null
 		write "Postgre password has been reset."
 }
 #-------------------------
@@ -407,7 +408,7 @@ function postgre.config {
 #-------------------------
 # Install
 function postgre.install {
-		if [ "$(postgre)" -eq 0 ]; then
+		if [ "$(postgre >/dev/null)" -eq 0 ]; then
 			writeline "PostgreSQL already installed" && return 1
 		fi
 		local osu=$(os.name)
@@ -459,7 +460,7 @@ function postgre.install {
 #------------------------
 # Uninstall postgre
 function postgre.uninstall {
-		if [ "$(postgre)" -eq 1 ]; then
+		if [ "$(postgre >/dev/null)" -eq 1 ]; then
 			writeline "PostgreSQL not installed" && return 1
 		fi
 		/usr/local/vesta/bin/v-delete-database-host pgsql localhost
