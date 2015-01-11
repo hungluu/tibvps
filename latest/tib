@@ -521,13 +521,13 @@ function postgre.uninstall {
 			ubuntu|debian)
 				local pga1="/etc/phppgadmin/config.inc.php"
 				local pga2="/etc/apache2/conf.d/phppgadmin"
-				sudo apt-get -y purge postgresql postgresql-contrib phppgadmin
+				apt-get -y purge postgresql postgresql-contrib phppgadmin
+				apt-get -y autoremove
 			;;
 			redhat|centos)
 				local pga1="/etc/phpPgAdmin/config.inc.php"
 				local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
-				yum remove --enablerepo=remi -y postgresql postgresql-server postgresql-contrib phpPgAdmin
-				yum remove -y postgresql postgresql-server postgresql-contrib phpPgAdmin
+				yum -y remove postgresql postgresql-server postgresql-contrib phpPgAdmin
 			;;
 		esac;
 		rm -f "$pga1" "$pga2" "$(postgre.config)"
@@ -568,7 +568,7 @@ function memcached.stats {
 #-------------------------
 # Get memcached version
 function memcached.version {
-	sed -n -r -e"s|(.*)version(.*)\ (([0-9]+)(\.[0-9]+){0,})(.*)$|\3|p" <<< $( memcached.stats )
+	sed -nre "s|(.*)version(.*)\ (([0-9]+)(\.[0-9]+){0,})(.*)$|\3|p" <<< $( memcached.stats )
 }
 #-------------------------
 # Install memcached
@@ -599,7 +599,7 @@ function memcached.install {
 			# update packages
 			apt-get update
 			# install
-			apt-get install memcached php5-memcache
+			apt-get install memcached php5-memcached
 			chkconfig memcached on
 			service memcached start
 			service "$(apache.name)" restart
@@ -621,7 +621,6 @@ function memcached.uninstall {
 				# uninstall
 				chkconfig memcached off
 				yum -y remove php-pecl-memcached php-pecl-memcache memcached memcached-selinux
-				service memcached start
 				service "$(apache.name)" restart
 				service "nginx" restart
 				writetitle "Memcached uninstalled"
@@ -631,8 +630,8 @@ function memcached.uninstall {
 				service memcached stop
 				# uninstall
 				chkconfig memcached off
-				apt-get -y remove memcached php5-memcache
-				service memcached start
+				apt-get -y remove memcached php5-memcached
+				apt-get -y autoremove
 				service "$(apache.name)" restart
 				service "nginx" restart
 				writetitle "Memcached uninstalled"
