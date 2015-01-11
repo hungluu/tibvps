@@ -73,6 +73,9 @@ function align {
 	esac;
 	drawtext "${text}\n" $distance
 }
+#------------------------
+# Write title
+# @param text
 function writetitle {
 	writeline
 	drawline "="
