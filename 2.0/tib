@@ -383,8 +383,11 @@ function postgre.resetpw {
 # Fix postgresql bug that has
 # no service name on centOS
 function postgre {
+    writeline "fuck"
 	local name="$(postgre.name)"
+    writeline "fuck2"
 	service.exists "$name" && writeline "$name is installed." && return 0
+    writeline "fuck3"
 	"$(postgre.version)" | grep "" && writeline "$name is installed." && return 1 || writeline "$name is installed." && return 0
 }
 #-----------------------
@@ -407,6 +410,7 @@ function postgre.config {
 #-------------------------
 # Install
 function postgre.install {
+        if postgre
 		local osu=$(os.name)
 		local os="${osu,,}"
 		writetitle "STARTING TO INSTALL POSTGRESQL"
