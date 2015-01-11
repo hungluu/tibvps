@@ -589,7 +589,16 @@ function memcached.config {
 #-------------------------
 # Get memcached port
 function memcached.port {
-	sed -nre "s|PORT=\"(.*)\"|\1|p" "$(memcached.config)"
+	local osu="$(os.name)"
+	local os="${osu,,}"
+	case $os in
+		centos|redhat)
+			sed -nre "s|PORT=\"(.*)\"|\1|p" "/etc/sysconfig/memcached"
+		;;
+		ubuntu|debian)
+			sed -rne "s|\-p\ ([0-9]{1,})|\1|p" "/etc/memcached.conf"
+		;;
+	esac
 }
 #--------------------------
 # Stats
