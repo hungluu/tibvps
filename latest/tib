@@ -408,7 +408,7 @@ function postgre.config {
 #-------------------------
 # Install
 function postgre.install {
-		if [ "$(postgre >/dev/null)" -eq 0 ]; then
+		if [ postgre -eq 0 ]; then
 			writeline "PostgreSQL already installed" && return 1
 		fi
 		local osu=$(os.name)
@@ -460,7 +460,7 @@ function postgre.install {
 #------------------------
 # Uninstall postgre
 function postgre.uninstall {
-		if [ "$(postgre >/dev/null)" -eq 1 ]; then
+		if [ postgre -eq 1 ]; then
 			writeline "PostgreSQL not installed" && return 1
 		fi
 		/usr/local/vesta/bin/v-delete-database-host pgsql localhost
