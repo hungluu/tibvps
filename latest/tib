@@ -26,19 +26,19 @@ DIR="$( cd -P "$( dirname "$SOURCE" )" && pwd )"
 # Write text
 # @param text
 function write {
-		printf $"$1"
+	printf $"$1"
 }
 #------------------
 # Write text within a line
 # @param text
 function writeline {
-		printf $"$1\n"
+	printf $"$1\n"
 }
 #-----------------------
 # Draw a horizontal line
 # @param symbol | text length should be 1
 function drawline {
-		printf '%*s' "${COLUMNS:-$(tput cols)}" '' | tr ' ' "${1}"
+	printf '%*s' "${COLUMNS:-$(tput cols)}" '' | tr ' ' "${1}"
 }
 #-----------------------
 # Draw a line of text on screen
@@ -56,20 +56,20 @@ function align {
 	local distance=${#text}
 	local maxlength=$(tput cols)
 	case "${1}" in
-		left)
-			let distance=0
-		;;
-		right)
-			let distance=$((maxlength-distance))
-		;;
-		center)
-			let maxlength=$((maxlength/2))
-			let distance=$((distance/2))
-			let distance=$((maxlength-distance))
-		;;
-		*)
-			return
-		;;
+	left)
+		let distance=0
+	;;
+	right)
+		let distance=$((maxlength-distance))
+	;;
+	center)
+		let maxlength=$((maxlength/2))
+		let distance=$((distance/2))
+		let distance=$((maxlength-distance))
+	;;
+	*)
+		return
+	;;
 	esac;
 	drawtext "${text}\n" $distance
 }
@@ -200,184 +200,190 @@ function vesta.install {
 }
 function vesta.uninstall {
 	if  service.exists "vesta"; then
-		# packages installed by vesta
-		# becuz vesta needs a fresh server
-		# these packages should not be
-		# installed before vesta
-		local packages=(
-			"apache*"
-			"fail2ban*"
-			"mysql*"
-			"nginx*"
-			"dovecot*"
-			"vsftpd*"
-			"exim*"
-			"messagebus*"
-			"bind*"
-			# apache centos
-			"httpd httpd-tools apr apr-util"
-		)
-		writetitle "Unistalling Vestacp"
-		if service.running "vesta"; then
-			service "vesta" stop
-		fi
-		writeline "@= Vestacp sevice stopped"
-		# kill named process
-		kill "$(pgrep named)"
-		local osu="$(os.name)"
-		local os="${osu,,}"
-		writeline "@= Detected OS is $osu."
-		# detect os to do right steps
-		case "$os" in
-			ubuntu|debian)
-				writeline "@= Unistalling vesta*" && apt-get -y purge vesta* >/dev/null && writeline " :: uninstalled"
-				rm -f /etc/apt/sources.list.d/vesta.list 2>/dev/null
-				writeline "@= Vesta repo removed."
-				writetitle " Unistalling Vestacp components"
-				apt-get -y purge "${packages[@]}" >/dev/null
-				# clear unneeded dependencies
-				writetitle "Clean up packages"
-				apt-get -y autoremove
-			;;
-			redhat|centos)
-				writeline "@= Unistalling vesta*" && yum -y remove vesta* >/dev/null && writeline " :: uninstalled"
-				rm -f /etc/yum.repos.d/vesta.repo 2>/dev/null
-				writeline "@= Vesta repo removed."
-				writetitle " Unistalling Vestacp components"
-				yum -y remove "${packages[@]}" >/dev/null
-				# clear unneeded dependencies
-				writetitle "Clean up packages"
-				yum clean all
-			;;
-			*)
-				writeline "Not supported os for Vestacp. Did you really installed it on your system."
-			;;
-		esac;
-		# reset iptables rules
-		writetitle "Reset iptables and vesta chains"
-		ip.reset
-		# iptable chains added
-		# when installing vesta
-		local chains=(
-			"fail2ban-VESTA"
-			"fail2ban-SSH"
-			"fail2ban-MAIL"
-			"vesta"
-		)
-		for k in "${chains[@]}"; do
-			writeline "@= Removing ${k}"
-			iptables -X "${k}"
-			writeline " :: removed"
-		done
-		ip.save
-		writeline "@= IP configs reset."
-		# remove all other services not properly uninstalled
-		# delete admin user and cronjobs
-		writetitle "Remove user and cronjobs"
-		rm -rf /home/admin && passwd -l admin >/dev/null && writeline "@= User:admin locked." && crontab -r -u admin >/dev/null && userdel -r admin
-		writeline "@= User:admin and cronjobs deleted."
-		rm -rf /usr/local/vesta 2>/dev/null
-		rm -rf /root/vst_install_backups 2>/dev/null
-		writeline "@= Vestacp related-files removed."
-		writetitle "Vestacp already unistalled"
+	# packages installed by vesta
+	# becuz vesta needs a fresh server
+	# these packages should not be
+	# installed before vesta
+	local packages=(
+		"apache*"
+		"fail2ban*"
+		"mysql*"
+		"nginx*"
+		"dovecot*"
+		"vsftpd*"
+		"exim*"
+		"messagebus*"
+		"bind*"
+		# apache centos
+		"httpd httpd-tools apr apr-util"
+	)
+	writetitle "Unistalling Vestacp"
+	if service.running "vesta"; then
+		service "vesta" stop
+	fi
+	writeline "@= Vestacp sevice stopped"
+	# kill named process
+	kill "$(pgrep named)"
+	local osu="$(os.name)"
+	local os="${osu,,}"
+	writeline "@= Detected OS is $osu."
+	# detect os to do right steps
+	case "$os" in
+		ubuntu|debian)
+			writeline "@= Unistalling vesta*" && apt-get -y purge vesta* >/dev/null && writeline " :: uninstalled"
+			rm -f /etc/apt/sources.list.d/vesta.list 2>/dev/null
+			writeline "@= Vesta repo removed."
+			writetitle " Unistalling Vestacp components"
+			apt-get -y purge "${packages[@]}" >/dev/null
+			# clear unneeded dependencies
+			writetitle "Clean up packages"
+			apt-get -y autoremove
+		;;
+		redhat|centos)
+			writeline "@= Unistalling vesta*" && yum -y remove vesta* >/dev/null && writeline " :: uninstalled"
+			rm -f /etc/yum.repos.d/vesta.repo 2>/dev/null
+			writeline "@= Vesta repo removed."
+			writetitle " Unistalling Vestacp components"
+			yum -y remove "${packages[@]}" >/dev/null
+			# clear unneeded dependencies
+			writetitle "Clean up packages"
+			yum clean all
+		;;
+		*)
+			writeline "Not supported os for Vestacp. Did you really installed it on your system."
+		;;
+	esac;
+	# reset iptables rules
+	writetitle "Reset iptables and vesta chains"
+	ip.reset
+	# iptable chains added
+	# when installing vesta
+	local chains=(
+		"fail2ban-VESTA"
+		"fail2ban-SSH"
+		"fail2ban-MAIL"
+		"vesta"
+	)
+	for k in "${chains[@]}"; do
+		writeline "@= Removing ${k}"
+		iptables -X "${k}"
+		writeline " :: removed"
+	done
+	ip.save
+	writeline "@= IP configs reset."
+	# remove all other services not properly uninstalled
+	# delete admin user and cronjobs
+	writetitle "Remove user and cronjobs"
+	rm -rf /home/admin && passwd -l admin >/dev/null && writeline "@= User:admin locked." && crontab -r -u admin >/dev/null && userdel -r admin
+	writeline "@= User:admin and cronjobs deleted."
+	rm -rf /usr/local/vesta 2>/dev/null
+	rm -rf /root/vst_install_backups 2>/dev/null
+	writeline "@= Vestacp related-files removed."
+	writetitle "Vestacp already unistalled"
 	else
-		writetitle "Vestacp is not installed"
+	writetitle "Vestacp is not installed"
 	fi
 }
 #-------------------
 # Check if vesta control panel ssl enabled
 function vesta.ssl {
-		if grep -q [[:blank:]]ssl[[:blank:]] /usr/local/vesta/nginx/conf/nginx.conf; then
-				write "enabled"
-				return 0
-		else
-				write "disabled"
-				return 1
-		fi
+	if grep -q [[:blank:]]ssl[[:blank:]] /usr/local/vesta/nginx/conf/nginx.conf; then
+		write "enabled"
+		return 0
+	else
+		write "disabled"
+		return 1
+	fi
 }
 #------------------
 # Disable vesta control panel ssl
 function vesta.ssl.disable {
-		local status=$(vesta.ssl)
-		if [ "${status:-0}" = "enabled" ]; then
-				sed -r -i -e "s/([[:space:]])ssl([[:space:]])/\1\#ssl/" /usr/local/vesta/nginx/conf/nginx.conf
-				service vesta restart
-				writeline "Vestacp SSL disabled."
-		else
-				writeline "Vestacp SSL already disabled."
-		fi
+	local status=$(vesta.ssl)
+	if [ "${status:-0}" = "enabled" ]; then
+		sed -r -i -e "s/([[:space:]])ssl([[:space:]])/\1\#ssl/" /usr/local/vesta/nginx/conf/nginx.conf
+		service vesta restart
+		writeline "Vestacp SSL disabled."
+	else
+		writeline "Vestacp SSL already disabled."
+	fi
 }
 #-------------------
 # Enable vesta control panel ssl
 function vesta.ssl.enable {
-		local status=$(vesta.ssl)
-		if [ "${status:-0}" = "enabled" ]; then
-				writeline "Vestacp SSL already enabled."
-		else
-				sed -r -i -e "s/([[:space:]])#ssl([[:space:]])/\1\ssl/" /usr/local/vesta/nginx/conf/nginx.conf
-				service vesta restart
-				writeline "Vestacp SSL enabled."
-		fi
+	local status=$(vesta.ssl)
+	if [ "${status:-0}" = "enabled" ]; then
+		writeline "Vestacp SSL already enabled."
+	else
+		sed -r -i -e "s/([[:space:]])#ssl([[:space:]])/\1\ssl/" /usr/local/vesta/nginx/conf/nginx.conf
+		service vesta restart
+		writeline "Vestacp SSL enabled."
+	fi
 }
 
 # apache2 config path
 function apache.config {
-		local osu=$(os.name)
-		local os="${osu,,}"
-		# detect os to do right steps
-		case "$os" in
-				ubuntu|debian)
-						write "/etc/apache2/apache2.conf"
-						return
-				;;
-				redhat|centos)
-						write "/etc/httpd/conf/httpd.conf"
-						return
-				;;
-		esac;
+	local osu=$(os.name)
+	local os="${osu,,}"
+	# detect os to do right steps
+	case "$os" in
+		ubuntu|debian)
+			write "/etc/apache2/apache2.conf"
+			return
+		;;
+		redhat|centos)
+			write "/etc/httpd/conf/httpd.conf"
+			return
+		;;
+	esac;
 }
 # apache2 service name
 function apache.name {
-		local osu=$(os.name)
-		local os="${osu,,}"
-		# detect os to do right steps
-		case "$os" in
-				ubuntu|debian)
-						write "apache2"
-						return
-				;;
-				redhat|centos)
-						write "httpd"
-						return
-				;;
-		esac;
+	local osu=$(os.name)
+	local os="${osu,,}"
+	# detect os to do right steps
+	case "$os" in
+		ubuntu|debian)
+			write "apache2"
+			return
+		;;
+		redhat|centos)
+			write "httpd"
+			return
+		;;
+	esac;
 }
 
 #=========================================
-#		   POSTGRESQL
+#	  POSTGRESQL
 #=========================================
 #-------------------------
 # Get postgre short version
 function postgre.version {
-		sudo -u postgres psql --version 2>/dev/null | sed -n -r -e"s|([a-zA-Z]+)(.*)\ (([0-9]+)(\.[0-9]+){0,})(.*)$|\3|p"
+	sudo -u postgres psql --version 2>/dev/null | sed -n -r -e"s|([a-zA-Z]+)(.*)\ (([0-9]+)(\.[0-9]+){0,})(.*)$|\3|p"
 }
 #-----------------------
 # postgresql server name {
 function postgre.name {
-		write "postgresql"
+	write "postgresql"
 }
 
 #--------------------------
 # Default password for postgre
 function postgre.pw {
-		write "pr@boyz123"
+	write "pr@boyz123"
 }
 #-------------------------
 # Reset password for postgre
 # Return default password set by this script
 function postgre.resetpw {
-		sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$(postgre.pw)'" >/dev/null
-		write "Postgre password has been reset."
+	sudo -u postgres psql -c "ALTER USER postgres WITH PASSWORD '$(postgre.pw)'" >/dev/null
+	write "Postgre password has been reset."
+}
+#-------------------------
+# Fix postgre status
+function postgre.running {
+	local name="$(postgre.name)"
+	ps -ef | grep ^postgre >/dev/null && write "service:$name is running." && return 0 || write "service:$name is not running" && return 1
 }
 #-------------------------
 # Fix postgresql bug that has
@@ -387,107 +393,107 @@ function postgre {
 	if service.exists "$name"; then
 		writeline "service:$name is installed." && return 0
 	fi
-	echo "$(postgre.version)" | grep ^[0-9] >/dev/null && writeline "service:$name is installed." && return 0 || writeline "service:$name is not installed." && return 1
+	echo "$(postgre.version)" | grep ^[0-9] >/dev/null && write "service:$name is installed." && return 0 || write "service:$name is not installed." && return 1
 }
 #-----------------------
 # postgresql config path
 function postgre.config {
-		local osu=$(os.name)
-		local os="${osu,,}"
-		# detect os to do right steps
-		case "$os" in
-				ubuntu|debian)
-						write "/etc/postgresql/$(postgre.version)/main/pg_hba.conf"
-						return
-				;;
-				redhat|centos)
-						write "/var/lib/pgsql/data/pg_hba.conf"
-						return
-				;;
-		esac;
+	local osu=$(os.name)
+	local os="${osu,,}"
+	# detect os to do right steps
+	case "$os" in
+		ubuntu|debian)
+			write "/etc/postgresql/$(postgre.version)/main/pg_hba.conf"
+			return
+		;;
+		redhat|centos)
+			write "/var/lib/pgsql/data/pg_hba.conf"
+			return
+		;;
+	esac;
 }
 #-------------------------
 # Install
 function postgre.install {
-		if postgre >/dev/null; then
-			writeline "PostgreSQL already installed" && return 1
-		fi
-		local osu=$(os.name)
-		local os="${osu,,}"
-		writetitle "STARTING TO INSTALL POSTGRESQL"
-		# detect os to do right steps
-		case "$os" in
-				ubuntu|debian)
-						#1. Install PostgreSQL packages
-						apt-get install postgresql postgresql-contrib phppgadmin
-						local pga1="/etc/phppgadmin/config.inc.php"
-						local pga2="/etc/apache2/conf.d/phppgadmin"
-				;;
-				redhat|centos)
-						#1. Install PostgreSQL packages
-						yum install postgresql postgresql-server postgresql-contrib phpPgAdmin
-						#* If you have remi installed then don't forget to explicitly enable it.
-						yum install --enablerepo=remi postgresql postgresql-server postgresql-contrib phpPgAdmin
-						local pga1="/etc/phpPgAdmin/config.inc.php"
-						local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
-				;;
-		esac;
+	if postgre >/dev/null; then
+		writeline "PostgreSQL already installed" && return 1
+	fi
+	local osu=$(os.name)
+	local os="${osu,,}"
+	writetitle "STARTING TO INSTALL POSTGRESQL"
+	# detect os to do right steps
+	case "$os" in
+		ubuntu|debian)
+			#1. Install PostgreSQL packages
+			apt-get install postgresql postgresql-contrib phppgadmin
+			local pga1="/etc/phppgadmin/config.inc.php"
+			local pga2="/etc/apache2/conf.d/phppgadmin"
+		;;
+		redhat|centos)
+			#1. Install PostgreSQL packages
+			yum install postgresql postgresql-server postgresql-contrib phpPgAdmin
+			#* If you have remi installed then don't forget to explicitly enable it.
+			yum install --enablerepo=remi postgresql postgresql-server postgresql-contrib phpPgAdmin
+			local pga1="/etc/phpPgAdmin/config.inc.php"
+			local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
+		;;
+	esac;
 
-		#2. Initialize database cluster
-		service $("postgre.name") initdb
-		writetitle "CONFIG AND SET PASSWORD"
-		write "Default password can be found at : bash tib postgre pw" | align center
-		drawline "-"
-		#3. Download hba configuration
-		wget http://c.vestacp.com/0.9.8/rhel/pg_hba.conf -O "$(postgre.config)"
-		#4. Start the server
-		service "$(postgre.name)" start
-		#5. Reset oracle user password
-		postgre.resetpw
-		#6. Enable pgsql databases support in vesta.
-		# Check if pgsql is not added
-		grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf || sed -i -r -e"s|^DB_SYSTEM\='(.*)'|DB_SYSTEM\='\1\,pgsql'|" "$(vesta.config)"
-		sed -i -r -e"s|^DB_SYSTEM\='(.*)\,\,(.*)'|DB_SYSTEM\='\1\,\2'|g" "$(vesta.config)"
-		#7. Register pg instance in control panel
-		/usr/local/vesta/bin/v-add-database-host pgsql localhost postgres pr@boyz123
-		#8. Download phpPgAdmin configuration
-		writetitle "CONFIG phpPgAdmin"
-		wget http://c.vestacp.com/0.9.8/rhel/pga.conf -O "$pga1"
-		wget http://c.vestacp.com/0.9.8/rhel/httpd-pga.conf -O "$pga2"
-		#9. Restart web server
-		service "$(apache.name)" restart
-		writetitle "Postgre version ""$(postgre.version)"" installed"
+	#2. Initialize database cluster
+	service $("postgre.name") initdb
+	writetitle "CONFIG AND SET PASSWORD"
+	write "Default password can be found at : bash tib postgre pw" | align center
+	drawline "-"
+	#3. Download hba configuration
+	wget http://c.vestacp.com/0.9.8/rhel/pg_hba.conf -O "$(postgre.config)"
+	#4. Start the server
+	service "$(postgre.name)" start
+	#5. Reset oracle user password
+	postgre.resetpw
+	#6. Enable pgsql databases support in vesta.
+	# Check if pgsql is not added
+	grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf || sed -i -r -e"s|^DB_SYSTEM\='(.*)'|DB_SYSTEM\='\1\,pgsql'|" "$(vesta.config)"
+	sed -i -r -e"s|^DB_SYSTEM\='(.*)\,\,(.*)'|DB_SYSTEM\='\1\,\2'|g" "$(vesta.config)"
+	#7. Register pg instance in control panel
+	/usr/local/vesta/bin/v-add-database-host pgsql localhost postgres pr@boyz123
+	#8. Download phpPgAdmin configuration
+	writetitle "CONFIG phpPgAdmin"
+	wget http://c.vestacp.com/0.9.8/rhel/pga.conf -O "$pga1"
+	wget http://c.vestacp.com/0.9.8/rhel/httpd-pga.conf -O "$pga2"
+	#9. Restart web server
+	service "$(apache.name)" restart
+	writetitle "Postgre version ""$(postgre.version)"" installed"
 }
 #------------------------
 # Uninstall postgre
 function postgre.uninstall {
-		if postgre >/dev/null; then
-			/usr/local/vesta/bin/v-delete-database-host pgsql localhost
-			# Check if pgsql is not added
-			grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf && sed -i -r -e"s|^DB_SYSTEM\='(.*)\,pgsql(.*)'|DB_SYSTEM\='\1\2'|" "$(vesta.config)"
-			sed -i -r -e"s|^DB_SYSTEM\='(.*)\,\,(.*)'|DB_SYSTEM\='\1\,\2'|g" "$(vesta.config)"
-			service "$(postgre.name)" stop
-			local osu=$(os.name)
-			local os="${osu,,}"
-			# detect os to do right steps
-			case "$os" in
-					ubuntu|debian)
-							local pga1="/etc/phppgadmin/config.inc.php"
-							local pga2="/etc/apache2/conf.d/phppgadmin"
-							sudo apt-get -y purge postgresql postgresql-contrib phppgadmin
-					;;
-					redhat|centos)
-							local pga1="/etc/phpPgAdmin/config.inc.php"
-							local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
-							yum remove --enablerepo=remi -y postgresql postgresql-server postgresql-contrib phpPgAdmin
-							yum remove -y postgresql postgresql-server postgresql-contrib phpPgAdmin
-					;;
-			esac;
-			rm -f "$pga1" "$pga2" "$(postgre.config)"
-			service "$(apache.name)" restart
-		else
-			writeline "PostgreSQL not installed" && return 1
-		fi
+	if postgre >/dev/null; then
+		/usr/local/vesta/bin/v-delete-database-host pgsql localhost
+		# Check if pgsql is not added
+		grep ^DB_SYSTEM='.*pgsql.*' /usr/local/vesta/conf/vesta.conf && sed -i -r -e"s|^DB_SYSTEM\='(.*)\,pgsql(.*)'|DB_SYSTEM\='\1\2'|" "$(vesta.config)"
+		sed -i -r -e"s|^DB_SYSTEM\='(.*)\,\,(.*)'|DB_SYSTEM\='\1\,\2'|g" "$(vesta.config)"
+		service "$(postgre.name)" stop
+		local osu=$(os.name)
+		local os="${osu,,}"
+		# detect os to do right steps
+		case "$os" in
+			ubuntu|debian)
+				local pga1="/etc/phppgadmin/config.inc.php"
+				local pga2="/etc/apache2/conf.d/phppgadmin"
+				sudo apt-get -y purge postgresql postgresql-contrib phppgadmin
+			;;
+			redhat|centos)
+				local pga1="/etc/phpPgAdmin/config.inc.php"
+				local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
+				yum remove --enablerepo=remi -y postgresql postgresql-server postgresql-contrib phpPgAdmin
+				yum remove -y postgresql postgresql-server postgresql-contrib phpPgAdmin
+			;;
+		esac;
+		rm -f "$pga1" "$pga2" "$(postgre.config)"
+		service "$(apache.name)" restart
+	else
+		writeline "PostgreSQL not installed" && return 1
+	fi
 }
 
 
@@ -525,31 +531,33 @@ function service_apply {
 		name="$( ${realname} )"
 	fi
 	if array.exists supported[@] $action; then
-		case "$action" in
-			"")
-				if service.exists $name; then
-					writeline "service:${name} is installed."
-				else
-					writeline "service:${name} is not installed."
-				fi
-			;;
-			"running")
-				if service.running $name; then
-					writeline "service:${name} is running"
-				fi
-			;;
-			"version")
-				local version="${name}"".version"
-				function.exists $version && version="$( ${version} )" && writeline "service:${name} version is ${version}." || writeline "Can't get service:${name} version."
-			;;
-			"name")
-				write "${name}"
-			;;
-			*)
-				writeline "service:${name} is ${action}ing"
-				service "$name" "$action" >/dev/null
-			;;
-		esac;
+	case "$action" in
+		"")
+			if service.exists $name; then
+				writeline "service:${name} is installed."
+			else
+				writeline "service:${name} is not installed."
+			fi
+		;;
+		"running")
+			if service.running $name; then
+				writeline "service:${name} is running"
+					else
+						writeline "service:${name} is not running"
+			fi
+		;;
+		"version")
+			local version="${name}"".version"
+			function.exists $version && version="$( ${version} )" && writeline "service:${name} version is ${version}." || writeline "Can't get service:${name} version."
+		;;
+		"name")
+			write "${name}"
+		;;
+		*)
+			writeline "service:${name} is ${action}ing"
+			service "$name" "$action" >/dev/null
+		;;
+	esac;
 	else
 		writeline "Action:${action} is not allowed."
 	fi
