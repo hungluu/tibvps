@@ -563,6 +563,7 @@ function memcached.config {
 #-------------------------
 # Get memcached port
 function memcached.port {
+	echo 1
 }
 #-------------------------
 # Install memcached
@@ -601,25 +602,39 @@ function memcached.install {
 }
 #--------------------------
 # Uninstall memcached
-function memcached.uninstall {}
+function memcached.uninstall {
+	echo 1
+}
 #--------------------------
 # Check php session used with memcached
-function memcached.session {}
+function memcached.session {
+	echo 1
+}
 #--------------------------
 # Active php session with memcached
-function memcached.session.active {}
+function memcached.session.active {
+	echo 1
+}
 #--------------------------
 # Deactive php session with memcached
-function memcached.session.deactive {}
+function memcached.session.deactive {
+	echo 1
+}
 #--------------------------
 # Check remote access status
-function memcached.remote {}
+function memcached.remote {
+	echo 1
+}
 #--------------------------
 # Active remote access
-function memcached.remote.active {}
+function memcached.remote.active {
+	echo 1
+}
 #--------------------------
 # Deactive remote access
-function memcached.remote.deactive {}
+function memcached.remote.deactive {
+	echo 1
+}
 #--------------------------
 # Stats
 function memcached.stats {
