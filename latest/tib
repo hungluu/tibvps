@@ -221,7 +221,11 @@ function vesta.install {
 		bash vst-install.sh && writeline "VestaCP installed."
 		# delete installer after done
 		rm -f $PATH"/vst-install.sh" $PATH"/vst-install-rhel.sh"
-		writetitle "SUCCESSFUL INSTALLING VESTACP version ""$(vesta.version)"
+		if service.exists "vesta"; then
+			writetitle "SUCCESSFULLY INSTALLING VESTACP version ""$(vesta.version)"
+		else
+			writeline "FAIL INSTALLING VESTACP"
+		fi
 	else
 		writeline "Vestacp not supported for your os."
 	fi
@@ -312,7 +316,7 @@ function vesta.uninstall {
 	rm -rf /usr/local/vesta 2>/dev/null
 	rm -rf /root/vst_install_backups 2>/dev/null
 	writeline "@= Vestacp related-files removed."
-	writetitle "Vestacp already unistalled"
+	writetitle "Vestacp unistalled"
 	else
 	writetitle "Vestacp is not installed"
 	fi
@@ -506,7 +510,11 @@ function postgre.install {
 	wget http://c.vestacp.com/0.9.8/rhel/httpd-pga.conf -O "$pga2"
 	#9. Restart web server
 	service "$(apache.name)" restart
-	writetitle "Postgre version ""$(postgre.version)"" installed"
+	if postgre; then
+		writetitle "Postgre version ""$(postgre.version)"" installed"
+	else
+		writetitle "FAIL installing Postgre"
+	fi
 }
 #------------------------
 # Uninstall postgre
@@ -595,7 +603,6 @@ function memcached.install {
 			service memcached start
 			service "$(apache.name)" restart
 			service "nginx" restart
-			writetitle "Memcached $(memcached.version) installed"
 		;;
 		ubuntu|debian)
 			writetitle "Starting to install memcached on your ${osu}"
@@ -607,9 +614,14 @@ function memcached.install {
 			service memcached start
 			service "$(apache.name)" restart
 			service "nginx" restart
-			writetitle "Memcached $(memcached.version) installed"
 		;;
 	esac;
+
+	if service.exists "memcached"; then
+		writetitle "Memcached $(memcached.version) installed"
+	else
+		writetitle "FAIL installing memcached"
+	fi
 }
 #--------------------------
 # Uninstall memcached
