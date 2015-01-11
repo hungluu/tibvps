@@ -386,7 +386,7 @@ function postgre.resetpw {
 function postgre {
 	local name="$(postgre.name)"
 	service.exists "$name" && writeline "service:$name is installed." && return 0
-	echo "$(postgre.version)" | grep ^[0-9] >/dev/null && writeline "service:$name is installed." && return 1 || writeline "service:$name is installed." && return 0
+	echo "$(postgre.version)" | grep ^[0-9] >/dev/null && writeline "service:$name is not installed." && return 1 || writeline "service:$name is installed." && return 0
 }
 #-----------------------
 # postgresql config path
@@ -527,6 +527,8 @@ function service_apply {
 			"")
 				if service.exists $name; then
 					writeline "service:${name} is installed."
+				else
+					writeline "service:${name} is not installed."
 				fi
 			;;
 			"running")
