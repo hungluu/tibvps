@@ -303,7 +303,11 @@ function vesta.uninstall {
 	# remove all other services not properly uninstalled
 	# delete admin user and cronjobs
 	writetitle "Remove user and cronjobs"
-	rm -rf /home/admin && passwd -l admin >/dev/null && writeline "@= User:admin locked." && crontab -r -u admin >/dev/null && userdel -r admin
+	rm -rf /home/admin
+	passwd -l admin >/dev/null
+	writeline "@= User:admin locked."
+	crontab -r -u admin >/dev/null
+	userdel -r admin
 	writeline "@= User:admin and cronjobs deleted."
 	rm -rf /usr/local/vesta 2>/dev/null
 	rm -rf /root/vst_install_backups 2>/dev/null
