@@ -548,7 +548,7 @@ function postgre.uninstall {
 			ubuntu|debian)
 				local pga1="/etc/phppgadmin/config.inc.php"
 				local pga2="/etc/apache2/conf.d/phppgadmin"
-				apt-get -y purge postgresql postgresql-contrib phppgadmin
+				apt-get -y purge postgresql* postgresql-contrib phppgadmin
 				# clear unneeded dependencies
 				writetitle "Clean up packages"
 				apt-get -y autoremove
@@ -556,7 +556,7 @@ function postgre.uninstall {
 			redhat|centos)
 				local pga1="/etc/phpPgAdmin/config.inc.php"
 				local pga2="/etc/httpd/conf.d/phpPgAdmin.conf"
-				yum -y remove postgresql postgresql-server postgresql-contrib phpPgAdmin
+				yum -y remove postgresql* postgresql-server postgresql-contrib phpPgAdmin
 				# clear unneeded dependencies
 				writetitle "Clean up packages"
 				yum clean all
