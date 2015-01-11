@@ -597,7 +597,7 @@ function memcached.install {
 			service "$(apache.name)" restart
 			writetitle "Memcached installed"
 		;;
-	esac
+	esac;
 }
 #--------------------------
 # Uninstall memcached
